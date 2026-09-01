@@ -148,6 +148,15 @@ impl AnisetteHeaders {
             return Ok(AnisetteHeadersProviderRes::local(Box::new(prov)));
         }
 
+        // [Shard patch] iOS 등에서 온디바이스(SSC)/v3 프로비저닝이 불안정하므로, anisette_url이 있으면
+        // v1 원격(단순 GET)을 우선한다 — 로그인/갱신 모두 이 경로를 쓴다.
+        #[cfg(feature = "remote-anisette")]
+        if !configuration.anisette_url.is_empty() {
+            return Ok(AnisetteHeadersProviderRes::remote(Box::new(
+                remote_anisette::RemoteAnisetteProvider::new(configuration.anisette_url.clone()),
+            )));
+        }
+
         // TODO: handle Err because it will just go to remote anisette and not tell the user anything
         if let Ok(ssc_anisette_headers_provider) =
             AnisetteHeaders::get_ssc_anisette_headers_provider(configuration.clone())

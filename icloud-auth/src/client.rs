@@ -535,12 +535,9 @@ impl AppleAccount {
             .headers(headers.await)
             .send().await?;
 
-        if !res.status().is_success() {
-            let __s = res.status().as_u16() as i64;
-            let __b = res.text().await.unwrap_or_default();
-            return Err(Error::AuthSrpWithMessage(__s, __b));
-        }
-
+        // 재전송 엔드포인트가 405 등으로 막혀도, 디바이스 2FA 코드는 로그인 시점에 애플이
+        // 이미 트러스티드 기기로 자동 전송한다. 상태와 무관하게 검증 단계로 진행한다.
+        let _ = res;
         return Ok(LoginState::Needs2FAVerification);
     }
 

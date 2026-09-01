@@ -536,7 +536,9 @@ impl AppleAccount {
             .send().await?;
 
         if !res.status().is_success() {
-            return Err(Error::AuthSrp);
+            let __s = res.status().as_u16() as i64;
+            let __b = res.text().await.unwrap_or_default();
+            return Err(Error::AuthSrpWithMessage(__s, __b));
         }
 
         return Ok(LoginState::Needs2FAVerification);
@@ -562,7 +564,9 @@ impl AppleAccount {
             .send().await?;
 
         if !res.status().is_success() {
-            return Err(Error::AuthSrp);
+            let __s = res.status().as_u16() as i64;
+            let __b = res.text().await.unwrap_or_default();
+            return Err(Error::AuthSrpWithMessage(__s, __b));
         }
 
         return Ok(LoginState::NeedsSMS2FAVerification(body));

@@ -555,14 +555,17 @@ impl AppleAccount {
 
         let res = self
             .client
-            .put("https://gsa.apple.com/auth/verify/phone/")
+            .put("https://gsa.apple.com/auth/verify/phone")
             .headers(headers.await)
             .json(&body)
             .send().await?;
 
-        // 발송 엔드포인트가 405로 막혀도, 전화번호만 있는 계정은 로그인 시 애플이 SMS를 자동
-        // 전송하는 경우가 많다. 상태와 무관하게 검증 단계로 진행한다(코드가 안 오면 URL bag 방식 필요).
-        let _ = res;
+        // 끝 슬래시(/auth/verify/phone/)가 405의 원인으로 보여 제거. 실패하면 상태+본문을 드러낸다.
+        if !res.status().is_success() {
+            let __s = res.status().as_u16() as i64;
+            let __b = res.text().await.unwrap_or_default();
+            return Err(Error::AuthSrpWithMessage(__s, __b));
+        }
 
         return Ok(LoginState::NeedsSMS2FAVerification(body));
     }

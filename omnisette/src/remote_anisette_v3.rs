@@ -265,7 +265,11 @@ impl AnisetteClient {
         let end_provisioning_url = urls.get("midFinishProvisioning").unwrap().as_string().unwrap();
         debug!("Got provisioning urls: {} and {}", start_provisioning_url, end_provisioning_url);
 
-        let provision_ws_url = format!("{}/v3/provisioning_session", self.url).replace("https://", "wss://");
+        // [Shard patch] http→ws 매핑도 한다 — 자체 호스팅 anisette-v3-server를 평문 http(예: :6969)로
+        // 두면 기존 코드는 https→wss만 바꿔 "http://…"가 그대로 남아 connect_async가 실패했다.
+        let provision_ws_url = format!("{}/v3/provisioning_session", self.url)
+            .replace("https://", "wss://")
+            .replace("http://", "ws://");
         let (mut connection, _) = connect_async(&provision_ws_url).await?;
 
 

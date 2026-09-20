@@ -102,6 +102,13 @@ impl AnisetteConfiguration {
         self
     }
 
+    // [Shard patch] v3 프로비저닝 서버 URL을 명시적으로 설정한다. auth.rs가 v3 모드에서 anisette_url을
+    // 비우고 이 값을 채우면 provider 선택이 v3로 간다(get_anisette_headers_provider의 v3 분기).
+    pub fn set_anisette_url_v3(mut self, anisette_url_v3: String) -> AnisetteConfiguration {
+        self.anisette_url_v3 = anisette_url_v3;
+        self
+    }
+
     pub fn set_macos_serial(mut self, macos_serial: String) -> AnisetteConfiguration {
         self.macos_serial = macos_serial;
         self
@@ -154,6 +161,21 @@ impl AnisetteHeaders {
         if !configuration.anisette_url.is_empty() {
             return Ok(AnisetteHeadersProviderRes::remote(Box::new(
                 remote_anisette::RemoteAnisetteProvider::new(configuration.anisette_url.clone()),
+            )));
+        }
+
+        // [Shard patch] v3 opt-in: 위 v1 분기가 anisette_url 있을 때 먼저 반환하므로, 여기 도달하려면
+        // 호출자(auth.rs)가 anisette_url을 **의도적으로 비우고** anisette_url_v3를 채운 것이다(iOS 26.6.1처럼
+        // 애플이 v1 정적 신원을 HTML로 거부할 때). SSC(온디바이스)보다 먼저 시도해 사이드로드 iOS에서
+        // SSC 실패를 거치지 않게 한다.
+        #[cfg(feature = "remote-anisette-v3")]
+        if !configuration.anisette_url_v3.is_empty() {
+            return Ok(AnisetteHeadersProviderRes::remote(Box::new(
+                remote_anisette_v3::RemoteAnisetteProviderV3::new(
+                    configuration.anisette_url_v3.clone(),
+                    configuration.configuration_path.clone(),
+                    configuration.macos_serial.clone(),
+                ),
             )));
         }
 

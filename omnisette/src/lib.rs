@@ -47,6 +47,12 @@ pub enum AnisetteError {
     #[cfg(feature = "remote-anisette-v3")]
     #[error("JSON error {0}")]
     SerdeError(#[from] serde_json::Error),
+    // [Shard patch] 서버(anisette-v3-server)가 provisioning_session에서 보낸 실패 원문을 그대로 담는다 —
+    // 예전엔 클라이언트 enum에 그 result variant가 없어 serde가 크래시해 진짜 원인(예: EndProvisioning
+    // -45054)이 숨었다. 이 variant로 서버 예외 메시지를 폰 로그까지 노출한다.
+    #[cfg(feature = "remote-anisette-v3")]
+    #[error("Provisioning server error: {0}")]
+    ProvisioningServerError(String),
     #[error("IO error {0}")]
     IOError(#[from] io::Error),
     #[error("ADI error {0}")]

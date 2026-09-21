@@ -285,7 +285,15 @@ impl AnisetteClient {
             ProvisioningSuccess {
                 #[allow(dead_code)] // it's not even dead, rust just has problems
                 adi_pb: String
-            }
+            },
+            // [Shard patch] 서버가 실패를 이 result들로 보낸다 — enum에 없어서 예전엔 serde가 크래시해
+            // 진짜 원인이 숨었다(사용자 폰엔 "unknown variant EndProvisioningError" 만 보였다). 이제 message를
+            // 받아 그대로 에러로 올린다. Unknown(serde other)은 미래 변형까지 안전하게 잡는다.
+            StartProvisioningError { message: Option<String> },
+            EndProvisioningError { message: Option<String> },
+            Timeout,
+            #[serde(other)]
+            Unknown,
         }
 
         loop {
@@ -353,6 +361,26 @@ impl AnisetteClient {
                         state.adi_pb = Some(base64_decode(&adi_pb));
                         connection.close(None).await?;
                         break;
+                    }
+                    // [Shard patch] 서버 실패를 원문 메시지째 에러로 올린다(크래시 대신).
+                    ProvisionInput::StartProvisioningError { message } => {
+                        let _ = connection.close(None).await;
+                        return Err(AnisetteError::ProvisioningServerError(
+                            format!("StartProvisioning: {}", message.unwrap_or_else(|| "(no message)".into()))));
+                    }
+                    ProvisionInput::EndProvisioningError { message } => {
+                        let _ = connection.close(None).await;
+                        return Err(AnisetteError::ProvisioningServerError(
+                            format!("EndProvisioning: {}", message.unwrap_or_else(|| "(no message)".into()))));
+                    }
+                    ProvisionInput::Timeout => {
+                        let _ = connection.close(None).await;
+                        return Err(AnisetteError::ProvisioningServerError("server timeout".into()));
+                    }
+                    ProvisionInput::Unknown => {
+                        let _ = connection.close(None).await;
+                        return Err(AnisetteError::ProvisioningServerError(
+                            format!("unexpected server message: {txt}")));
                     }
                 }
             } else if data.is_close() {

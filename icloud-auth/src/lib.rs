@@ -20,6 +20,10 @@ pub enum Error {
     ExtraStep(String),
     #[error("Failed to parse a plist {0}")]
     PlistError(#[from] plist::Error),
+    // [Shard patch] 애플이 plist 대신 HTML/에러페이지를 돌려줄 때, 그 본문 앞부분을 담아 폰 로그로
+    // 실제 원인(본인확인·업데이트·지역차단·계정상태 등)을 보이게 한다. 예전엔 opaque PlistError로 숨었다.
+    #[error("Apple returned non-plist (likely HTML): {0}")]
+    ServerNonPlist(String),
     #[error("Request failed {0}")]
     ReqwestError(#[from] reqwest::Error),
     #[error("Failed getting anisette data {0}")]

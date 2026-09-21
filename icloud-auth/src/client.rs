@@ -170,7 +170,15 @@ pub struct AuthenticationExtras {
 
 async fn parse_response(res: Result<Response, reqwest::Error>) -> Result<plist::Dictionary, crate::Error> {
     let res = res?.text().await?;
-    let res: plist::Dictionary = plist::from_bytes(res.as_bytes())?;
+    let res: plist::Dictionary = match plist::from_bytes(res.as_bytes()) {
+        Ok(d) => d,
+        // [Shard patch] plist가 아니면(애플이 HTML/에러페이지 반환) 본문 앞부분(공백 접어서 600자)을
+        // 에러에 담아 폰 로그로 실제 원인을 노출한다.
+        Err(_) => {
+            let snippet: String = res.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(600).collect();
+            return Err(crate::Error::ServerNonPlist(snippet));
+        }
+    };
     let res: plist::Value = res.get("Response").unwrap().to_owned();
     match res {
         plist::Value::Dictionary(dict) => Ok(dict),

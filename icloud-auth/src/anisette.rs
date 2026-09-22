@@ -44,20 +44,15 @@ impl AnisetteData {
         let mut headers = self.base_headers.clone();
         let old_client_info = headers.remove("X-Mme-Client-Info");
         if client_info {
-            let client_info = match old_client_info {
-                Some(v) => {
-                    let temp = v.as_str();
-
-                    temp.replace(
-                        temp.split('<').nth(3).unwrap().split('>').nth(0).unwrap(),
-                        "com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)",
-                    )
-                }
-                None => {
-                    return headers;
-                }
-            };
-            headers.insert("X-Mme-Client-Info".to_owned(), client_info.to_owned());
+            // [Shard/AltStore PR #1796] 애플 엣지가 "Xcode" 클라이언트 신원(com.apple.dt.Xcode)을 503으로
+            // 차단하기 시작했다. anisette 서버가 주는 Xcode client-info를 그대로 복사해 쓰면 503이 나므로,
+            // akd 신원 + 현재 OS(macOS 27)로 하드코딩해 덮어쓴다(같은 요청이 akd 신원이면 서비스에 도달).
+            // AltServer의 AnisetteDataManager와 동일한 접근. 서버가 준 old_client_info(모델·OS·Xcode)는 무시.
+            let _ = old_client_info;
+            headers.insert(
+                "X-Mme-Client-Info".to_owned(),
+                "<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_owned(),
+            );
         }
 
         if app_info {

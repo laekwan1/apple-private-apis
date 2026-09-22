@@ -21,7 +21,10 @@ num-bigint = "0.4.3"
 cbc = { version = "0.1.2", features = ["std"] }
 aes = "0.8.2"
 pkcs7 = "0.3.0"
-reqwest = { version = "0.11.14", features = ["blocking", "json", "default-tls"] }
+# [Shard patch] default-tls(=iOS 네이티브 Security.framework)는 로그인 TLS ClientHello 지문을 iOS가 만들어,
+# iOS 26.6.1이 26.4.1과 다른 지문을 내보내 gsa.apple.com이 HTML 503으로 거부하는 것으로 추정(전수조사 결론).
+# rustls로 바꾸면 iOS 버전과 무관한 고정 지문이라 두 iOS가 동일하게 취급된다. 애플 루트 CA는 client.rs가 이미 추가.
+reqwest = { version = "0.11.14", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 omnisette = {path = "../omnisette", features = ["remote-anisette-v3"]}
 thiserror = "1.0.58"
 tokio = "1"

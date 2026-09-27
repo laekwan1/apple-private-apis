@@ -51,7 +51,7 @@ impl AnisetteData {
             let _ = old_client_info;
             headers.insert(
                 "X-Mme-Client-Info".to_owned(),
-                "<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_owned(),
+                "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_owned(),
             );
         }
 

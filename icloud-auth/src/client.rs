@@ -253,7 +253,7 @@ impl AppleAccount {
         );
         gsa_headers.insert(
             "X-MMe-Client-Info",
-            HeaderValue::from_str("<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
+            HeaderValue::from_str("<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
         );
 
         let header = RequestHeader {
@@ -400,7 +400,7 @@ impl AppleAccount {
         );
         gsa_headers.insert(
             "X-MMe-Client-Info",
-            HeaderValue::from_str("<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
+            HeaderValue::from_str("<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
         );
 
         let header = RequestHeader {

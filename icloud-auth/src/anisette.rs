@@ -44,15 +44,26 @@ impl AnisetteData {
         let mut headers = self.base_headers.clone();
         let old_client_info = headers.remove("X-Mme-Client-Info");
         if client_info {
-            // [Shard/AltStore PR #1796] 애플 엣지가 "Xcode" 클라이언트 신원(com.apple.dt.Xcode)을 503으로
-            // 차단하기 시작했다. anisette 서버가 주는 Xcode client-info를 그대로 복사해 쓰면 503이 나므로,
-            // akd 신원 + 현재 OS(macOS 27)로 하드코딩해 덮어쓴다(같은 요청이 akd 신원이면 서비스에 도달).
-            // AltServer의 AnisetteDataManager와 동일한 접근. 서버가 준 old_client_info(모델·OS·Xcode)는 무시.
-            let _ = old_client_info;
-            headers.insert(
-                "X-Mme-Client-Info".to_owned(),
-                "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_owned(),
-            );
+            // [Shard 2026-10] client-info의 **기기·OS는 anisette 서버가 준 값을 그대로 쓴다** — 그것이
+            // 서버가 프로비저닝한 ADI 머신과 일치해야 애플이 받아준다(불일치면 429/-80045; isideload PR #26
+            // "use client info from anisette server"와 동일). 단 **앱 구간만 akd로** 강제한다: 애플 엣지가
+            // Xcode 클라이언트 신원(com.apple.dt.Xcode)을 503으로 막기 때문(AltStore PR #1796). 예전엔 기기·OS까지
+            // 통째로 하드코딩(<MacBookPro13,2> macOS;13.1)했는데, 실제 Mac-ADI 서버(mac-ani: <MacBookPro13,3>
+            // Mac OS X;10.12.6)로 바꾸자 그 하드코딩이 ADI와 어긋나 로그인이 막혔다. 서버 값이 없으면 종전 기본으로.
+            let client_info = match &old_client_info {
+                Some(server) => {
+                    // server 예: "<MacBookPro13,3> <Mac OS X;10.12.6;16G29> <...앱...>" — 앞 두 <...>(기기·OS)만
+                    // 취하고 앱 구간을 akd로 교체.
+                    let mut segs = server.split('>');
+                    let model = segs.next().unwrap_or("<MacBookPro13,2").trim();
+                    let os = segs.next().unwrap_or("<macOS;13.1;22C65").trim();
+                    format!("{model}> {os}> <com.apple.AuthKit/1 (com.apple.akd/1.0)>")
+                }
+                None => {
+                    "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_owned()
+                }
+            };
+            headers.insert("X-Mme-Client-Info".to_owned(), client_info);
         }
 
         if app_info {

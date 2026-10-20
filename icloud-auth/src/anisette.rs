@@ -42,6 +42,8 @@ impl AnisetteData {
             panic!("Invalid data!")
         }
         let mut headers = self.base_headers.clone();
+        // [Shard] 서버 UA는 client.rs가 GSA 헤더에만 쓰는 비표준 키 — cpd/다른 어디에도 안 새게 벗긴다.
+        headers.remove("X-Shard-User-Agent");
         let old_client_info = headers.remove("X-Mme-Client-Info");
         if client_info {
             // [Shard 2026-10] client-info의 **기기·OS는 anisette 서버가 준 값을 그대로 쓴다** — 그것이

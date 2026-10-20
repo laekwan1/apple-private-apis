@@ -254,7 +254,14 @@ impl AppleAccount {
         gsa_headers.insert("Accept", HeaderValue::from_str("*/*").unwrap());
         gsa_headers.insert(
             "User-Agent",
-            HeaderValue::from_str("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0").unwrap(),
+            HeaderValue::from_str(
+                // [Shard] GSA 요청 UA도 anisette 서버가 준 user_agent로 맞춘다(ADI 기기의 OS와 일치).
+                // 하드코딩 CFNetwork/1404 Darwin/22(macOS13)는 mac-ani(10.12.6=Darwin16)와 어긋났다.
+                valid_anisette.base_headers.get("X-Shard-User-Agent")
+                    .map(|s| s.as_str())
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0"),
+            ).unwrap(),
         );
         // [Shard] GSA 요청의 client-info를 anisette 서버가 준 실제 기기·OS로 맞춘다(앱 구간만 akd).
         // 하드코딩(<MacBookPro13,2> macOS;13.1)은 실제 Mac-ADI 서버(mac-ani: <MacBookPro13,3> Mac OS X;10.12.6)와
@@ -408,7 +415,14 @@ impl AppleAccount {
         gsa_headers.insert("Accept", HeaderValue::from_str("*/*").unwrap());
         gsa_headers.insert(
             "User-Agent",
-            HeaderValue::from_str("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0").unwrap(),
+            HeaderValue::from_str(
+                // [Shard] GSA 요청 UA도 anisette 서버가 준 user_agent로 맞춘다(ADI 기기의 OS와 일치).
+                // 하드코딩 CFNetwork/1404 Darwin/22(macOS13)는 mac-ani(10.12.6=Darwin16)와 어긋났다.
+                valid_anisette.base_headers.get("X-Shard-User-Agent")
+                    .map(|s| s.as_str())
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0"),
+            ).unwrap(),
         );
         // [Shard] GSA 요청의 client-info를 anisette 서버가 준 실제 기기·OS로 맞춘다(앱 구간만 akd).
         // 하드코딩(<MacBookPro13,2> macOS;13.1)은 실제 Mac-ADI 서버(mac-ani: <MacBookPro13,3> Mac OS X;10.12.6)와

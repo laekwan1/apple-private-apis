@@ -140,6 +140,7 @@ pub struct AnisetteData {
     one_time_password: String,
     routing_info: String,
     device_description: String,
+    device_user_agent: String,
     local_user_id: String,
     device_unique_identifier: String
 }
@@ -159,6 +160,9 @@ impl AnisetteData {
             ("X-Apple-I-MD".to_string(), self.one_time_password.clone()),
             ("X-Apple-I-MD-M".to_string(), self.machine_id.clone()),
             ("X-Mme-Client-Info".to_string(), self.device_description.clone()),
+            // [Shard] 서버의 user_agent를 비표준 키로 함께 실어 보낸다(client.rs가 GSA 요청 UA를 ADI
+            // 기기와 맞추게). icloud_auth generate_headers가 cpd로 새지 않게 이 키를 벗겨낸다.
+            ("X-Shard-User-Agent".to_string(), self.device_user_agent.clone()),
         ].into_iter())
     }
 }
@@ -244,6 +248,7 @@ impl AnisetteClient {
                     one_time_password,
                     routing_info,
                     device_description: self.client_info.client_info.clone(),
+                    device_user_agent: self.client_info.user_agent.clone(),
                     local_user_id: encode_hex(&state.md_lu()),
                     device_unique_identifier: state.device_id()
                 })

@@ -196,6 +196,11 @@ impl AppleAccount {
         let client = ClientBuilder::new()
             .add_root_certificate(Certificate::from_der(APPLE_ROOT)?)
             .http1_title_case_headers()
+            // Disable connection pooling (fresh connection per request). iloader v2.3.3
+            // "disabled reqwest connection pooling to reduce HTTP 429 errors from GrandSlam"
+            // — Apple's edge rate-limits reused connections harder. Login is a rare request,
+            // so there is no pooling benefit, and dodging the 429 is what matters.
+            .pool_max_idle_per_host(0)
             .connection_verbose(true)
             .build()?;
 

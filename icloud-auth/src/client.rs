@@ -256,9 +256,16 @@ impl AppleAccount {
             "User-Agent",
             HeaderValue::from_str("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0").unwrap(),
         );
+        // [Shard] GSA 요청의 client-info를 anisette 서버가 준 실제 기기·OS로 맞춘다(앱 구간만 akd).
+        // 하드코딩(<MacBookPro13,2> macOS;13.1)은 실제 Mac-ADI 서버(mac-ani: <MacBookPro13,3> Mac OS X;10.12.6)와
+        // 어긋나 애플이 로그인을 거부했다(헤더 ↔ ADI 불일치). generate_headers가 서버값+akd로 만든다.
+        let shard_ci = valid_anisette
+            .generate_headers(false, true, false)
+            .remove("X-Mme-Client-Info")
+            .unwrap_or_else(|| "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_string());
         gsa_headers.insert(
             "X-MMe-Client-Info",
-            HeaderValue::from_str("<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
+            HeaderValue::from_str(&shard_ci).unwrap(),
         );
 
         let header = RequestHeader {
@@ -403,9 +410,16 @@ impl AppleAccount {
             "User-Agent",
             HeaderValue::from_str("akd/1.0 CFNetwork/1404.0.5 Darwin/22.2.0").unwrap(),
         );
+        // [Shard] GSA 요청의 client-info를 anisette 서버가 준 실제 기기·OS로 맞춘다(앱 구간만 akd).
+        // 하드코딩(<MacBookPro13,2> macOS;13.1)은 실제 Mac-ADI 서버(mac-ani: <MacBookPro13,3> Mac OS X;10.12.6)와
+        // 어긋나 애플이 로그인을 거부했다(헤더 ↔ ADI 불일치). generate_headers가 서버값+akd로 만든다.
+        let shard_ci = valid_anisette
+            .generate_headers(false, true, false)
+            .remove("X-Mme-Client-Info")
+            .unwrap_or_else(|| "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>".to_string());
         gsa_headers.insert(
             "X-MMe-Client-Info",
-            HeaderValue::from_str("<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>").unwrap(),
+            HeaderValue::from_str(&shard_ci).unwrap(),
         );
 
         let header = RequestHeader {
